@@ -1,35 +1,67 @@
 function handleFile() {
-  // JSZipを使ってファイルを解凍する例
-  var zip = new JSZip();
+  var fileInput = document.getElementById("zipFileInput");
+  var file = fileInput.files[0];
 
-  zip.loadAsync(zipFileData).then(function (zip) {
-    zip.forEach(function (relativePath, zipEntry) {
-      if (!zipEntry.dir) {
-        // ファイル名の文字エンコーディングを指定して解凍する
-        var decodedFileName = zipEntry.name; // デフォルトのUTF-8エンコーディング
+  var reader = new FileReader();
+  reader.onload = function (event) {
+    var arrayBuffer = event.target.result;
+    var jszip = new JSZip();
 
-        if (isJapaneseEncoding(zipEntry.name)) {
-          // 日本語のエンコーディングがShift_JISの場合
-          decodedFileName = sjisToUTF8(zipEntry.name);
+    jszip
+      .loadAsync(arrayBuffer)
+      .then(function (zip) {
+        var fileObjects = [];
+
+        if (typeof zip.files !== "object" || zip.files === null) {
+          throw new Error("解凍エラー: zipファイルにエントリが存在しません");
         }
 
-        // 解凍されたファイル名を使用してファイルを保存する
-        // ここではファイル名を出力していますが、ファイルの保存先や方法は環境によって異なります
-        console.log(decodedFileName);
-      }
-    });
+        processEntries(zip, "", fileObjects).then(function () {
+          console.log(fileObjects);
+        });
+      })
+      .catch(function (error) {
+        console.error("解凍エラー:", error);
+      });
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+function processEntries(zip, folderPath, fileObjects) {
+  var entries = Object.keys(zip.files);
+
+  if (!entries.length) {
+    return Promise.resolve(); // エントリが存在しない場合は解決済みのPromiseを返す
+  }
+
+  var promises = entries.map(function (entry) {
+    var zipEntry = zip.files[entry];
+
+    if (zipEntry.dir) {
+      // ディレクトリの場合
+      var newFolderPath = folderPath + zipEntry.name + "/";
+      fileObjects.push({
+        type: "directory",
+        path: newFolderPath,
+      });
+
+      return processEntries(zipEntry, newFolderPath, fileObjects);
+    } else {
+      // ファイルの場合
+      return zipEntry.async("uint8array").then(function (data) {
+        var decoder = new TextDecoder("utf-8");
+        var content = decoder.decode(data);
+
+        var filePath = folderPath + zipEntry.name;
+        fileObjects.push({
+          type: "file",
+          path: filePath,
+          content: content,
+        });
+      });
+    }
   });
 
-  // Shift_JISエンコーディングをUTF-8に変換する関数の例
-  function sjisToUTF8(str) {
-    var iconv = require("iconv-lite");
-    var buffer = iconv.decode(Buffer.from(str, "binary"), "Shift_JIS");
-    return iconv.encode(buffer.toString("utf-8"), "utf-8").toString();
-  }
-
-  // 文字列がShift_JISエンコーディングであるかどうかを判定する関数の例
-  function isJapaneseEncoding(str) {
-    // 実装によって判定方法は異なるため、必要に応じて変更してください
-    return /[一-龠々〆ヵヶ亜-熙]+/.test(str);
-  }
+  return Promise.all(promises);
 }
