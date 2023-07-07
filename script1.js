@@ -65,3 +65,40 @@ function processEntries(zip, folderPath, fileObjects) {
 
   return Promise.all(promises);
 }
+
+// 与えられた配列
+const array = [
+  { path: "dir1/1.png" },
+  { path: "dir1/2.png" },
+  { path: "dir1/3.png" },
+  { path: "dir1/4.png" },
+  { path: "dir1/5.png" },
+  { path: "dir2/1.png" },
+  { path: "dir2/2.png" },
+  { path: "dir2/3.png" },
+  { path: "dir1/4.png" },
+  { path: "dir2/5.png" },
+];
+
+// 結果を格納するためのオブジェクト
+const result = array.reduce((acc, obj) => {
+  // ファイルパスをディレクトリとファイル名に分割
+  const [dir, file] = obj.path.split("/");
+
+  // ディレクトリがまだ結果に含まれていない場合、空の配列を作成
+  if (!acc[dir]) {
+    acc[dir] = [];
+  }
+
+  // ファイル名をディレクトリの配列に追加
+  acc[dir].push(file);
+
+  return acc;
+}, {});
+
+// 要求された形式のオブジェクト配列を作成
+const transformedArray = Object.entries(result).map(([dir, files]) => ({
+  [dir]: files,
+}));
+
+console.log(transformedArray);
