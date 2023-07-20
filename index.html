@@ -1,24 +1,7 @@
-<!-- <!DOCTYPE html>
-<html>
-  <head>
-    <title>Zipファイルの解凍と中身の確認</title>
-  </head>
-  <body>
-    <h1>Zipファイルの解凍と中身の確認</h1>
-    <input type="file" id="zipFileInput" />
-    <button onclick="handleFile()">解凍と中身の確認</button>
-    <div id="output"></div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
-     <script src="script.js"></script> -->
-<!-- <script src="script1.js"></script>
-  </body>
-</html>  -->
-
 <!DOCTYPE html>
 <html>
   <head>
-    <title>ドラッグ＆ドロップファイルアップロード</title>
+    <title>ドラッグ＆ドロップまたはクリックでファイルをアップロード</title>
     <style>
       #drop-area {
         border: 2px dashed #ccc;
@@ -27,22 +10,32 @@
         line-height: 200px;
         text-align: center;
         font-size: 24px;
+        cursor: pointer; /* マウスカーソルを指示型に変更 */
       }
 
       #drop-area img {
         max-width: 100px;
         margin-bottom: 10px;
       }
+
+      /* ファイル選択ボタンを非表示にする */
+      #file-input {
+        display: none;
+      }
     </style>
     <script>
-      function handleFileDrop(event) {
-        event.preventDefault();
-        var files = event.dataTransfer.files;
+      function handleFileSelect(event) {
+        var files = event.target.files || event.dataTransfer.files;
         // ファイルの処理を行う（アップロードなど）
         for (var i = 0; i < files.length; i++) {
           console.log("アップロードするファイル: " + files[i].name);
           // ここにファイルのアップロード処理を追加する
         }
+      }
+
+      function handleFileDrop(event) {
+        event.preventDefault();
+        handleFileSelect(event);
       }
 
       function handleDragOver(event) {
@@ -53,9 +46,9 @@
   <body>
     <div id="drop-area" ondrop="handleFileDrop(event)" ondragover="handleDragOver(event)">
       <!-- 任意のメッセージや画像を表示する -->
-      <img src="your_image_url.png" alt="Custom Image" />
-      <p>ここにファイルをドロップしてください</p>
-      <p>ファイルは自動的にアップロードされます</p>
+      <!-- <img src="your_image_url.png" alt="Cu" /> -->
+      <label for="file-input">クリックしてファイルを選択</label>
+      <input type="file" id="file-input" accept=".jpg, .jpeg, .png, .gif" />
     </div>
   </body>
 </html>
